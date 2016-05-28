@@ -1,6 +1,6 @@
 ################################################################
 # Program: links.py
-# Description: Create ntfs links fromt the addon into WOW
+# Description: Create ntfs links from the addon into WOW
 # Author: jamedina@gmail.com
 # -------------------------------------------------------------
 # Required Modules: win32com.shell
@@ -45,17 +45,32 @@ def GetKeyValue(key, value, default):
     return result
 
 
-def GetWOWPath():
+def GetWOWPath(beta):
 
-    WOWPath = "C:\\Program Files (x86)\\World of Warcraft\\"
+    base = "HKLM\\SOFTWARE\\WOW6432Node\\"
 
-    WOWPath = GetKeyValue("HKLM\SOFTWARE\WOW6432Node" +
-                          "\Blizzard Entertainment\World of Warcraft",
-                          "InstallPath", WOWPath)
+    if beta:
+        log.info("Create symslink for WoW Beta")
+        default = "C:\\Program Files (x86)\\World of Warcraft Beta\\"
+        key = base + "Blizzard Entertainment\\World of Warcraft\\Beta\\"
+    else:
+        log.info("Create symslink for WoW Retail")
+        default = "C:\\Program Files (x86)\\World of Warcraft\\"
+        key = base + "Blizzard Entertainment\\World of Warcraft"
+
+    WOWPath = GetKeyValue(key, "InstallPath", default)
 
     log.info("WOW Path : '%s'", WOWPath)
 
     return WOWPath
+
+
+def BetaPath():
+    return GetWOWPath(True)
+
+
+def RetailPath():
+    return GetWOWPath(False)
 
 
 def CreateSysLink(original, destination):
@@ -70,14 +85,17 @@ def CreateSysLink(original, destination):
 
 def CreteLinks(WOWPath, addon):
 
-    interface_folder = os.path.join(WOWPath, "interface")
-    addons_folder = os.path.join(interface_folder, "addons")
+    if os.path.exists(WOWPath):
+        interface_folder = os.path.join(WOWPath, "interface")
+        addons_folder = os.path.join(interface_folder, "addons")
 
-    for folder in addon.main_folders:
-        desired_folder = folder.replace(addon.src_folder + os.sep, "")
-        new_folder = os.path.join(addons_folder, desired_folder)
-        log.info("Creating syslink for: '%s'", desired_folder)
-        CreateSysLink(folder, new_folder)
+        for folder in addon.main_folders:
+            desired_folder = folder.replace(addon.src_folder + os.sep, "")
+            new_folder = os.path.join(addons_folder, desired_folder)
+            log.info("Creating syslink for: '%s'", desired_folder)
+            CreateSysLink(folder, new_folder)
+    else:
+        log.warning("WoW folder: [%s] does not exist")
 
 if __name__ == '__main__':
 
@@ -92,9 +110,9 @@ if __name__ == '__main__':
             raise Exception("This script require admin privileges")
 
         addon = AddonInfo()
-        WOWPath = GetWOWPath()
 
-        CreteLinks(WOWPath, addon)
+        CreteLinks(RetailPath(), addon)
+        CreteLinks(BetaPath(), addon)
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
