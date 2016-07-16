@@ -23,7 +23,7 @@ from utils import AddonInfo
 log = None
 
 
-def ModifyVersion(toc_path, version):
+def ModifyVersion(toc_path, version, WowVersion):
     if os.path.exists(toc_path):
         out_path = toc_path + ".new"
         with codecs.open(out_path, "w", encoding='utf-8') as output_file:
@@ -31,6 +31,9 @@ def ModifyVersion(toc_path, version):
                 for line in input_file.readlines():
                     if not(line.find("## Version:") == -1):
                         line = "## Version: " + version + "\r\n"
+                    else:
+                        if not(line.find("## Interface:") == -1):
+                            line = "## Interface: " + WowVersion + "\r\n"
                     output_file.write(line)
         os.remove(toc_path)
         os.rename(out_path, toc_path)
@@ -43,7 +46,7 @@ def ModifyVersions(addon):
             addon_name = folder.replace(addon.src_folder + os.sep, "")
             toc_path = folder + os.sep + addon_name + ".toc"
             log.info("modiying version for: %s", addon_name)
-            ModifyVersion(toc_path, addon.version)
+            ModifyVersion(toc_path, addon.version, addon.WowVersion)
 
 if __name__ == '__main__':
 

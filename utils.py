@@ -39,6 +39,7 @@ class AddonInfo:
         self.toc = self.main_addon + os.sep + self.name + ".toc"
 
         self.version = self.GetAddonVersion()
+        self.WowVersion = self.GetAddonWoWVersion()
 
         self.folders, self.files, self.main_folders = self.GetSources()
 
@@ -69,6 +70,23 @@ class AddonInfo:
         self.log .info("Addon version is : '%s'", version)
 
         return version
+
+    def GetAddonWoWVersion(self):
+
+        WowVersion = None
+        reg_exp = re.compile(ur'## Interface..(.*)')
+
+        with codecs.open(self.toc, encoding='utf-8') as input_file:
+            for line in input_file.readlines():
+                match = re.search(reg_exp, line)
+                if not(match is None):
+                    WowVersion = match.group(1)
+                    WowVersion = WowVersion.replace("\r", "")
+                    break
+
+        self.log .info("Addon WoW version is : '%s'", WowVersion)
+
+        return WowVersion
 
     def GetSources(self):
 
