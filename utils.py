@@ -13,12 +13,13 @@ import codecs
 from os import walk
 import requests
 from lxml import html
-from urlparse import urlparse
-import urllib
+from urllib.parse import urlparse
+from urllib import request
 import zipfile
 import shutil
 import stat
 import subprocess
+import shutil
 
 # Log object
 log = None
@@ -57,7 +58,7 @@ class AddonInfo:
     def GetAddonVersion(self):
 
         version = None
-        reg_exp = re.compile(ur'## Version..(.*)')
+        reg_exp = re.compile(r'## Version..(.*)')
 
         with codecs.open(self.toc, encoding='utf-8') as input_file:
             for line in input_file.readlines():
@@ -74,7 +75,7 @@ class AddonInfo:
     def GetAddonWoWVersion(self):
 
         WowVersion = None
-        reg_exp = re.compile(ur'## Interface..(.*)')
+        reg_exp = re.compile(r'## Interface..(.*)')
 
         with codecs.open(self.toc, encoding='utf-8') as input_file:
             for line in input_file.readlines():
@@ -104,7 +105,7 @@ class AddonInfo:
 
         for folder in folders:
             folder_partial = folder.replace(self.src_folder + os.sep, "")
-            if(re.search(ur"\\", folder_partial) is None):
+            if(re.search(r"\\", folder_partial) is None):
                 main_folders.append(folder)
 
         return folders, files, main_folders
@@ -158,30 +159,20 @@ def get_git(url, folder):
     del_tree(folder + os.sep + ".git")
 
 
+def download_file(url, file_path):
+    myfile = requests.get(url, allow_redirects=True)
+    open(file_path, 'wb').write(myfile.content)
+
+
 def get_wowace(addon_url, folder):
-
-    url = addon_url + "/files/"
-
-    http_request = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
-    tree = html.fromstring(http_request.text)
-
-    file_page = tree.xpath('//td[@class="col-file"]/a')[0].attrib["href"]
-
-    parse = urlparse(url)
-
-    new_url = parse.scheme + "://" + parse.netloc + file_page
-
-    http_request = requests.get(new_url, headers={'User-Agent': 'Mozilla/5.0'})
-    tree = html.fromstring(http_request.text)
-
-    file_link = tree.xpath('//dd/a')[0].attrib["href"]
+    url = addon_url + "/files/latest"
 
     if not os.path.exists(folder):
         os.makedirs(folder)
 
     zip_file = folder + os.sep + "ace.zip"
 
-    urllib.urlretrieve(file_link, zip_file)
+    download_file(url, zip_file)
 
     with zipfile.ZipFile(zip_file, "r") as z:
         z.extractall(folder)
