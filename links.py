@@ -33,7 +33,7 @@ def GetKeyValue(key, value, default):
     exitcode = proc.returncode
 
     if exitcode == 0:
-        p = re.compile(ur'.*\REG_SZ\s*(.*)')
+        p = re.compile(r".*REG_SZ\s*(.*)")
         for line in out.splitlines():
             test_str = line
             found = re.search(p, test_str)
@@ -47,15 +47,14 @@ def GetKeyValue(key, value, default):
 
 def GetWOWPath(beta):
 
+    default = "KEY_NOT_FOUND"
     base = "HKLM\\SOFTWARE\\WOW6432Node\\"
 
     if beta:
-        log.info("Create symslink for WoW Beta")
-        default = "C:\\Program Files (x86)\\World of Warcraft Beta\\"
+        log.info("Create symslink for WoW Beta")        
         key = base + "Blizzard Entertainment\\World of Warcraft\\Beta\\"
     else:
         log.info("Create symslink for WoW Retail")
-        default = "C:\\Program Files (x86)\\World of Warcraft\\"
         key = base + "Blizzard Entertainment\\World of Warcraft"
 
     WOWPath = GetKeyValue(key, "InstallPath", default)
@@ -95,7 +94,7 @@ def CreteLinks(WOWPath, addon):
             log.info("Creating syslink for: '%s'", desired_folder)
             CreateSysLink(folder, new_folder)
     else:
-        log.warning("WoW folder: [%s] does not exist")
+        log.warning("WoW folder: [%s] does not exist", WOWPath)
 
 if __name__ == '__main__':
 
